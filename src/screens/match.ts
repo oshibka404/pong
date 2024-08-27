@@ -36,6 +36,29 @@ const BALL_RADIUS = 0.5;
 const PADDLE_SIZE = 8;
 const SPEED_CELLS_PER_MS = 20 / 1000;
 
+const defaultState = {
+    status: 'not_started' as MatchStatus,
+    timestamp: 0,
+    table: {
+        ball: {
+            position: {x: 0, y: 0},
+            speed: {x: 0, y: 0}
+        },
+        paddle1: {
+            position: 0,
+            speed: 0
+        },
+        paddle2: {
+            position: 0,
+            speed: 0
+        }
+    },
+    score: {
+        p1: 0,
+        p2: 0,
+    }
+}
+
 export class Match {
 
     private tableSize = {
@@ -43,28 +66,7 @@ export class Match {
         height: 0
     }
 
-    private state: MatchState = {
-        status: 'not_started',
-        timestamp: 0,
-        table: {
-            ball: {
-                position: {x: 0, y: 0},
-                speed: {x: 1, y: 0}
-            },
-            paddle1: {
-                position: 0,
-                speed: 0
-            },
-            paddle2: {
-                position: 0,
-                speed: 0
-            }
-        },
-        score: {
-            p1: 0,
-            p2: 0,
-        }
-    }
+    private state: MatchState = defaultState
 
     private matchStateEl: HTMLElement
     private matchStateMessageEl: HTMLElement
@@ -158,29 +160,35 @@ export class Match {
             ball.speed.y = -ball.speed.y
         }
 
-        if (ball.position.x < -this.tableSize.width / 2) {
+        const leftScoreLine = -this.tableSize.width / 2 + 2
+        const rightScoreLine = this.tableSize.width / 2 - 2
+
+        if (ball.position.x < leftScoreLine + BALL_RADIUS) {
             const distanceFromPaddleCenter = paddle1.position - ball.position.y
             if (Math.abs(distanceFromPaddleCenter) < PADDLE_SIZE / 2) {
                 this.bounceFromPaddle(ball, distanceFromPaddleCenter)
             } else {
                 this.state.score.p2 += 1
-                this.resetTable()
+                this.resetBall()
             }
         }
 
-        if (ball.position.x > this.tableSize.width / 2) {
+        if (ball.position.x > rightScoreLine - BALL_RADIUS) {
             const distanceFromPaddleCenter = paddle2.position - ball.position.y
             if (Math.abs(distanceFromPaddleCenter) < PADDLE_SIZE / 2) {
                 this.state.table.ball = this.bounceFromPaddle(ball, distanceFromPaddleCenter)
             } else {
                 this.state.score.p1 += 1
-                this.resetTable()
+                this.resetBall()
             }
         }
 
         ball.position.x += ball.speed.x * timeDelta * SPEED_CELLS_PER_MS
+        ball.position.x = Math.max(ball.position.x, leftScoreLine)
+        ball.position.x = Math.min(ball.position.x, rightScoreLine)
+        
         ball.position.y += ball.speed.y * timeDelta * SPEED_CELLS_PER_MS
-
+        
         paddle1.position += paddle1.speed * timeDelta * SPEED_CELLS_PER_MS
         paddle1.position = Math.max(paddle1.position, -this.tableSize.height / 2 + PADDLE_SIZE / 2)
         paddle1.position = Math.min(paddle1.position, this.tableSize.height / 2 - PADDLE_SIZE / 2)
@@ -189,7 +197,7 @@ export class Match {
         paddle2.position = Math.max(paddle2.position, -this.tableSize.height / 2 + PADDLE_SIZE / 2)
         paddle2.position = Math.min(paddle2.position, this.tableSize.height / 2 - PADDLE_SIZE / 2)
 
-        // this.debugEl.innerHTML = `<pre>${JSON.stringify(this.state, undefined, '  ')}</pre>`
+        this.debugEl.innerHTML = `<pre>${JSON.stringify(this.state, undefined, '  ')}</pre>`
 
         return this.state
     }
@@ -200,11 +208,15 @@ export class Match {
         return ball
     }
 
-    private resetTable() {
+    private resetBall() {
         this.state.table.ball = {
             position: {x: 0, y: 0},
             speed: {x: 0, y: 0}
         }
+        setTimeout(() => {
+            this.state.table.ball.speed.x = Math.random() > .5 ? -1 : 1
+            this.state.table.ball.speed.y = Math.random()
+        }, 1000)
     }
 
     private setStatus(state: MatchStatus) {
@@ -249,13 +261,18 @@ export class Match {
         document.body.addEventListener("keyup", this._handleKeyUp)
     }
 
+    private startGame() {
+        this.resetBall()
+        this.setStatus('running')
+    }
+
     private initTable() {
         this.tableSize = {
             width: Math.floor(this.matchEl.clientWidth / CELL_SIZE) - 2,
             height: Math.floor(this.matchEl.clientHeight / CELL_SIZE) - 8,
         }
         this.tableEl.style.width = `${this.tableSize.width}em`
-        this.tableEl.style.height = `${this.tableSize.width}em`
+        this.tableEl.style.height = `${this.tableSize.height}em`
     }
 
     private handleKeyDown(e: KeyboardEvent) {
@@ -263,7 +280,7 @@ export class Match {
             if (this.state.status === 'running') {
                 this.setStatus('paused')
             } else if (this.state.status === 'not_started') {
-                this.setStatus('running')
+                this.startGame()
             } else if (this.state.status === 'paused') {
                 this.setStatus('running')
             }
@@ -316,9 +333,14 @@ export class Match {
         }
     }
 
+    private resetState() {
+        this.setStatus('not_started')
+        this.state = defaultState
+    }
+
     hide() {
         this.matchEl.style.display = 'none'
-        this.setStatus('not_started')
+        this.resetState()
         if (this._handleKeyDown) {
             document.body.removeEventListener("keydown", this._handleKeyDown)
         }

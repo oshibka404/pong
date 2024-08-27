@@ -20,9 +20,9 @@ header {
 
 #table:before {
     content: '';
-    height: 100vh;
+    height: 100%;
     width: 0;
-    border: 1px dashed;
+    border: 2px dashed;
     left: 50%;
     position: absolute;
     top: 0;
