@@ -1,0 +1,74 @@
+header {
+    padding-bottom: 1em;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+    font-size: 2em;
+}
+
+#match {
+    flex-direction: column;
+    place-items: center;
+    place-content: center;
+}
+
+#table {
+    outline: 1em solid;
+    position: relative;
+}
+
+#table:before {
+    content: '';
+    height: 100vh;
+    width: 0;
+    border: 1px dashed;
+    left: 50%;
+    position: absolute;
+    top: 0;
+}
+
+#ball {
+    width: 1em;
+    height: 1em;
+    position: absolute;
+    left: 10em;
+    top: 10em;
+    background-color: #fff;
+}
+
+.paddle {
+    width: 1em;
+    height: 8em;
+    position: absolute;
+    background-color: #fff;
+}
+
+#paddle-p1 {
+    left: 1em;
+    top: 12em;
+}
+
+#paddle-p2 {
+    right: 1em;
+    top: 3em;
+}
+
+#match-state {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    place-items: center;
+    place-content: center;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    background-color: rgba(255,255,255,0.5);
+}
+
+#debug {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+}

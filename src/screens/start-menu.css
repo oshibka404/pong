@@ -1,0 +1,15 @@
+#start-menu {
+    display: flex;
+    place-items: center;
+    flex-direction: column;
+    justify-content: center;
+  
+    header {
+      font-size: 4em;
+      padding: 32px;
+    }
+
+    button {
+      font-size: 2em;
+    }
+}
