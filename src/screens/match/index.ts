@@ -86,10 +86,10 @@ export class Match {
         this.state.status = state
         if (state === 'running') {
             this.matchOverlay.hide()
-            requestAnimationFrame(this.tick)
         } else {
             this.matchOverlay.show(state)
         }
+        requestAnimationFrame(this.tick)
     }
 
     onQuit(callback: () => void): void {
@@ -104,6 +104,7 @@ export class Match {
         })
         this.initKeyboard()
         this.setStatus('not_started')
+        this.table.reset()
     }
 
     private initKeyboard() {
