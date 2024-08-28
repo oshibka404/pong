@@ -12,4 +12,19 @@
     button {
       font-size: 2em;
     }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: .5em;
+    }
+
+    .key {
+      border-radius: 0.5em;
+      display: inline-block;
+      padding: 0.5em;
+      margin-right: 0.5em;
+      background-color: rgba(255, 255, 255, .1);
+      box-shadow: #fff .25em .25em 0 0;
+    }
 }

@@ -1,4 +1,4 @@
-import './match.css'
+import './index.css'
 
 type MatchStatus = 'not_started' | 'running' | 'paused' | 'finished'
 
@@ -19,7 +19,8 @@ interface PaddleModel {
 
 interface MatchState {
     status: MatchStatus
-    timestamp: number
+    gameplayTime: number
+    pausedTime: number
     score: {
         p1: number
         p2: number
@@ -37,8 +38,9 @@ const PADDLE_SIZE = 8;
 const SPEED_CELLS_PER_MS = 20 / 1000;
 
 const defaultState = {
-    status: 'not_started' as MatchStatus,
-    timestamp: 0,
+    status: 'not_started',
+    gameplayTime: 0,
+    pausedTime: 0,
     table: {
         ball: {
             position: {x: 0, y: 0},
@@ -57,7 +59,7 @@ const defaultState = {
         p1: 0,
         p2: 0,
     }
-}
+} satisfies MatchState
 
 export class Match {
 
@@ -78,7 +80,7 @@ export class Match {
     private quitMatchEl: HTMLElement
     private score1El: HTMLElement
     private score2El: HTMLElement
-    private debugEl: HTMLElement
+    // private debugEl: HTMLElement
 
     private quit: () => void = () => {
         throw "Quit match callback is not initialized"
@@ -120,20 +122,19 @@ export class Match {
             this.quit()
         })
 
-        this.debugEl = document.getElementById('debug')!
+        // this.debugEl = document.getElementById('debug')!
         this.tick = this.tick.bind(this)
     }
 
     tick(timestamp: number) {
-        if (!this.state.timestamp) {
-            this.state.timestamp = timestamp
+        if (!this.state.gameplayTime) {
+            this.state.gameplayTime = timestamp
         }
-        if (this.state.status !== 'running') {
-            this.state.timestamp
-            return
+        if (this.state.status === 'paused') {
+            this.state.pausedTime = timestamp - this.state.gameplayTime
         }
 
-        const state = this.updateState(this.state, timestamp)
+        const state = this.updateState(this.state, timestamp - this.state.pausedTime)
 
         this.renderTable(state)
 
@@ -150,33 +151,39 @@ export class Match {
         this.score2El.innerText = state.score.p2.toString(10)
     }
 
-    private updateState(state: MatchState, timestamp: number): MatchState {
-        const timeDelta = timestamp - this.state.timestamp
-        this.state.timestamp = timestamp
+    private updateState(state: MatchState, gameplayTime: number): MatchState {
+        const timeDelta = gameplayTime - this.state.gameplayTime
+        this.state.gameplayTime = gameplayTime
 
         const {ball, paddle1, paddle2} = state.table
 
-        if (Math.abs(ball.position.y) > this.tableSize.height / 2) {
-            ball.speed.y = -ball.speed.y
+        if (ball.position.y + BALL_RADIUS > this.tableSize.height / 2) {
+            ball.speed.y = -Math.abs(ball.speed.y)
+        }
+        
+        if (ball.position.y - BALL_RADIUS < -this.tableSize.height / 2) {
+            ball.speed.y = Math.abs(ball.speed.y)
         }
 
         const leftScoreLine = -this.tableSize.width / 2 + 2
-        const rightScoreLine = this.tableSize.width / 2 - 2
 
-        if (ball.position.x < leftScoreLine + BALL_RADIUS) {
-            const distanceFromPaddleCenter = paddle1.position - ball.position.y
-            if (Math.abs(distanceFromPaddleCenter) < PADDLE_SIZE / 2) {
-                this.bounceFromPaddle(ball, distanceFromPaddleCenter)
+        if (ball.position.x <= leftScoreLine + BALL_RADIUS) {
+            const distanceFromPaddleCenter = ball.position.y - paddle1.position
+            if (Math.abs(distanceFromPaddleCenter) <= PADDLE_SIZE / 2) {
+                ball.speed.x = Math.abs(ball.speed.x)
+                ball.speed.y = distanceFromPaddleCenter / (PADDLE_SIZE / 2) // 0 to 1
             } else {
                 this.state.score.p2 += 1
                 this.resetBall()
             }
         }
 
+        const rightScoreLine = -leftScoreLine
         if (ball.position.x > rightScoreLine - BALL_RADIUS) {
-            const distanceFromPaddleCenter = paddle2.position - ball.position.y
-            if (Math.abs(distanceFromPaddleCenter) < PADDLE_SIZE / 2) {
-                this.state.table.ball = this.bounceFromPaddle(ball, distanceFromPaddleCenter)
+            const distanceFromPaddleCenter = ball.position.y - paddle2.position
+            if (Math.abs(distanceFromPaddleCenter) <= PADDLE_SIZE / 2) {
+                ball.speed.x = -Math.abs(ball.speed.x)
+                ball.speed.y = distanceFromPaddleCenter / (PADDLE_SIZE / 2) // 0 to 1
             } else {
                 this.state.score.p1 += 1
                 this.resetBall()
@@ -184,9 +191,6 @@ export class Match {
         }
 
         ball.position.x += ball.speed.x * timeDelta * SPEED_CELLS_PER_MS
-        ball.position.x = Math.max(ball.position.x, leftScoreLine)
-        ball.position.x = Math.min(ball.position.x, rightScoreLine)
-        
         ball.position.y += ball.speed.y * timeDelta * SPEED_CELLS_PER_MS
         
         paddle1.position += paddle1.speed * timeDelta * SPEED_CELLS_PER_MS
@@ -197,15 +201,9 @@ export class Match {
         paddle2.position = Math.max(paddle2.position, -this.tableSize.height / 2 + PADDLE_SIZE / 2)
         paddle2.position = Math.min(paddle2.position, this.tableSize.height / 2 - PADDLE_SIZE / 2)
 
-        this.debugEl.innerHTML = `<pre>${JSON.stringify(this.state, undefined, '  ')}</pre>`
+        // this.debugEl.innerHTML = `<pre>${JSON.stringify(this.state, undefined, '  ')}</pre>`
 
         return this.state
-    }
-
-    private bounceFromPaddle(ball: BallModel, distanceFromPaddleCenter: number): BallModel {
-        ball.speed.x = -ball.speed.x
-        ball.speed.y = -distanceFromPaddleCenter / (PADDLE_SIZE / 2) // 0 to 1
-        return ball
     }
 
     private resetBall() {
@@ -232,7 +230,6 @@ export class Match {
             this.matchStateMessageEl.innerHTML = 'Press SPACE to continue'
             this.matchStateEl.style.display = 'flex'
             this.quitMatchEl.style.display = 'block'
-            this.state.timestamp = 0
         } else if (state === 'finished') {
             this.matchStateMessageEl.innerHTML = 'Game ended'
             this.matchStateEl.style.display = 'flex'
