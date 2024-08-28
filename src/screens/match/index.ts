@@ -49,6 +49,8 @@ export class Match {
 
         // this.debugEl = document.createElement('div')
         // this.debugEl.id = 'debug'
+        // matchEl.appendChild(this.debugEl)
+
         this.tick = this.tick.bind(this)
     }
 
