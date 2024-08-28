@@ -13,12 +13,12 @@ header {
     place-content: center;
 }
 
-#table {
+.table {
     outline: 1em solid;
     position: relative;
 }
 
-#table:before {
+.table:before {
     content: '';
     height: 100%;
     width: 0;
@@ -28,7 +28,7 @@ header {
     top: 0;
 }
 
-#ball {
+.ball {
     width: 1em;
     height: 1em;
     position: absolute;
@@ -44,17 +44,17 @@ header {
     background-color: #fff;
 }
 
-#paddle-p1 {
+.paddle-p1 {
     left: 1em;
     top: 12em;
 }
 
-#paddle-p2 {
+.paddle-p2 {
     right: 1em;
     top: 3em;
 }
 
-#match-state {
+.match-state {
     position: fixed;
     display: flex;
     flex-direction: column;
