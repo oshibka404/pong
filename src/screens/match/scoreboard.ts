@@ -30,7 +30,7 @@ export class ScoreBoard {
 
     increment(player: 'p1' | 'p2') {
         this[player]++
-        if (this[player] > this.pointsToWin) {
+        if (this[player] >= this.pointsToWin) {
             this.endGame()
         }
     }
