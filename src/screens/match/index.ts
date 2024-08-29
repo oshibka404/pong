@@ -51,24 +51,24 @@ export class Match {
         // this.debugEl.id = 'debug'
         // matchEl.appendChild(this.debugEl)
 
-        this.tick = this.tick.bind(this)
+        this.nextFrame = this.nextFrame.bind(this)
     }
 
-    tick(timestamp: number) {
+    private nextFrame(elapsedTime: number) {
         if (!this.state.gameplayTime) {
-            this.state.gameplayTime = timestamp
+            this.state.gameplayTime = elapsedTime
         }
         if (this.state.status === 'paused') {
-            this.state.pausedTime = timestamp - this.state.gameplayTime
+            this.state.pausedTime = elapsedTime - this.state.gameplayTime
         }
 
-        this.updateModel(timestamp - this.state.pausedTime)
+        this.updateModel(elapsedTime - this.state.pausedTime)
         
         // this.debugEl.innerHTML = `<pre>${JSON.stringify(this.state, undefined, '  ')}</pre>`
 
         this.render()
 
-        requestAnimationFrame(this.tick)
+        requestAnimationFrame(this.nextFrame)
     }
 
     private render() {
@@ -86,7 +86,7 @@ export class Match {
         this.state.status = state
         if (state === 'running') {
             this.matchOverlay.hide()
-            requestAnimationFrame(this.tick)
+            requestAnimationFrame(this.nextFrame)
         } else {
             this.matchOverlay.show(state)
         }
