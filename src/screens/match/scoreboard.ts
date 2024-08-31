@@ -8,8 +8,10 @@ export class ScoreBoard {
     private score2El: HTMLElement
     el: HTMLElement
 
-    private p1 = 0
-    private p2 = 0
+    private model: Score = {
+        p1: 0,
+        p2: 0
+    }
 
     private winCallback: (score: Score) => void = () => {
         throw 'onWin callback is not initialized'
@@ -28,22 +30,27 @@ export class ScoreBoard {
         this.el.append(this.score1El, this.score2El)
     }
 
+    reset() {
+        this.model.p1 = 0
+        this.model.p2 = 0
+    }
+
     increment(player: 'p1' | 'p2') {
-        this[player]++
-        if (this[player] >= this.pointsToWin) {
+        this.model[player]++
+        if (this.model[player] >= this.pointsToWin) {
             this.endGame()
         }
     }
 
     render() {
-        this.score1El.innerText = this.p1.toString(10)
-        this.score2El.innerText = this.p2.toString(10)
+        this.score1El.innerText = this.model.p1.toString(10)
+        this.score2El.innerText = this.model.p2.toString(10)
     }
 
     private endGame() {
         this.winCallback({
-            p1: this.p1,
-            p2: this.p2
+            p1: this.model.p1,
+            p2: this.model.p2
         })
     }
 }

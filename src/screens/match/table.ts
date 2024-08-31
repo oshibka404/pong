@@ -81,7 +81,14 @@ export class MatchTable {
     }
 
     reset() {
-        this.resetBall()
+        this.model.ball = {
+            position: {x: 0, y: 0},
+            speed: {x: 0, y: 0}
+        }
+        setTimeout(() => {
+            this.model.ball.speed.x = Math.random() > .5 ? -1 : 1
+            this.model.ball.speed.y = Math.random()
+        }, 1000)
     }
 
     updateModel(timeDelta: number) {
@@ -103,7 +110,7 @@ export class MatchTable {
                 ball.speed.y = distanceFromPaddleCenter / (PADDLE_SIZE / 2) // 0 to 1
             } else {
                 this.scoreCallback('p2')
-                this.resetBall(1000)
+                this.reset()
             }
         }
 
@@ -115,7 +122,7 @@ export class MatchTable {
                 ball.speed.y = distanceFromPaddleCenter / (PADDLE_SIZE / 2) // 0 to 1
             } else {
                 this.scoreCallback('p1')
-                this.resetBall(1000)
+                this.reset()
             }
         }
 
@@ -129,17 +136,6 @@ export class MatchTable {
         paddle2.position += paddle2.speed * timeDelta * SPEED_CELLS_PER_MS
         paddle2.position = Math.max(paddle2.position, -this.size.height / 2 + PADDLE_SIZE / 2)
         paddle2.position = Math.min(paddle2.position, this.size.height / 2 - PADDLE_SIZE / 2)
-    }
-
-    private resetBall(throwInTimeout?: number) {
-        this.model.ball = {
-            position: {x: 0, y: 0},
-            speed: {x: 0, y: 0}
-        }
-        setTimeout(() => {
-            this.model.ball.speed.x = Math.random() > .5 ? -1 : 1
-            this.model.ball.speed.y = Math.random()
-        }, throwInTimeout)
     }
 
     render() {

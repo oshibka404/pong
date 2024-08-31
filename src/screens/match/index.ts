@@ -10,14 +10,14 @@ interface MatchModel {
     pausedTime: number
 }
 
-const defaultState = {
+const defaultModelState = {
     status: 'not_started',
     gameplayTime: 0,
     pausedTime: 0,
 } satisfies MatchModel
 
 export class Match {
-    private state: MatchModel = defaultState
+    private model: MatchModel = defaultModelState
 
     // private debugEl: HTMLElement
 
@@ -55,16 +55,16 @@ export class Match {
     }
 
     private nextFrame(elapsedTime: number) {
-        if (!this.state.gameplayTime) {
-            this.state.gameplayTime = elapsedTime
+        if (!this.model.gameplayTime) {
+            this.model.gameplayTime = elapsedTime
         }
-        if (this.state.status === 'paused') {
-            this.state.pausedTime = elapsedTime - this.state.gameplayTime
+        if (this.model.status === 'paused') {
+            this.model.pausedTime = elapsedTime - this.model.gameplayTime
         }
 
-        this.updateModel(elapsedTime - this.state.pausedTime)
+        this.updateModel(elapsedTime - this.model.pausedTime)
         
-        // this.debugEl.innerHTML = `<pre>${JSON.stringify(this.state, undefined, '  ')}</pre>`
+        // this.debugEl.innerHTML = `<pre>${JSON.stringify(this.model, undefined, '  ')}</pre>`
 
         this.render()
 
@@ -77,17 +77,17 @@ export class Match {
     }
 
     private updateModel(gameplayTime: number): void {
-        const timeDelta = gameplayTime - this.state.gameplayTime
-        this.state.gameplayTime = gameplayTime
+        const timeDelta = gameplayTime - this.model.gameplayTime
+        this.model.gameplayTime = gameplayTime
         this.table.updateModel(timeDelta)
     }
 
-    private setStatus(state: MatchStatus) {
-        this.state.status = state
-        if (state === 'running') {
+    private setStatus(status: MatchStatus) {
+        this.model.status = status
+        if (status === 'running') {
             this.matchOverlay.hide()
         } else {
-            this.matchOverlay.show(state)
+            this.matchOverlay.show(status)
         }
         requestAnimationFrame(this.nextFrame)
     }
@@ -116,27 +116,26 @@ export class Match {
     }
 
     private startGame() {
-        this.table.reset()
         this.setStatus('running')
     }
 
     private handleKeyDown(e: KeyboardEvent) {
         switch (e.code) {
             case 'Space':
-                if (this.state.status === 'running') {
+                if (this.model.status === 'running') {
                     this.setStatus('paused')
-                } else if (this.state.status === 'not_started') {
+                } else if (this.model.status === 'not_started') {
                     this.startGame()
-                } else if (this.state.status === 'paused') {
+                } else if (this.model.status === 'paused') {
                     this.setStatus('running')
                 }
                 break;
             case 'Escape':
-                if (this.state.status === 'running') {
+                if (this.model.status === 'running') {
                     this.setStatus('paused')
-                } else if (this.state.status === 'not_started') {
+                } else if (this.model.status === 'not_started') {
                     this.quit()
-                } else if (this.state.status === 'paused') {
+                } else if (this.model.status === 'paused') {
                     this.setStatus('running')
                 }
                 break;
@@ -144,7 +143,7 @@ export class Match {
             case 'ArrowDown':
             case 'KeyS':
             case 'KeyX':
-                if (this.state.status === 'running') {
+                if (this.model.status === 'running') {
                     this.table.onKeyDown(e.code)
                 }
                 break;
@@ -157,21 +156,16 @@ export class Match {
             case 'ArrowDown':
             case 'KeyS':
             case 'KeyX':
-                if (this.state.status === 'running') {
+                if (this.model.status === 'running') {
                     this.table.onKeyUp(e.code)
                 }
                 break;
         }
     }
 
-    private reset() {
-        this.setStatus('not_started')
-        this.state = defaultState
-    }
-
     hide() {
         this.matchEl.style.display = 'none'
-        this.reset()
+        this.setStatus('not_started')
         if (this._handleKeyDown) {
             document.body.removeEventListener("keydown", this._handleKeyDown)
         }
