@@ -166,6 +166,7 @@ export class Match {
     hide() {
         this.matchEl.style.display = 'none'
         this.setStatus('not_started')
+        this.model = defaultModelState
         if (this._handleKeyDown) {
             document.body.removeEventListener("keydown", this._handleKeyDown)
         }
